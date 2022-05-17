@@ -1,0 +1,147 @@
+DROP TABLE IF EXISTS tuition_reimbursement_process;
+DROP TABLE IF EXISTS tuition_reimbursement_form_data;
+DROP TABLE IF EXISTS event_grading_format;
+DROP TABLE IF EXISTS type_of_event;
+DROP TABLE IF EXISTS employee_user_details;
+
+ALTER TABLE employee DROP CONSTRAINT fk_employee_department;
+DROP TABLE IF EXISTS department;
+DROP TABLE IF EXISTS employee;
+
+CREATE TABLE IF NOT EXISTS employee (
+	employee_id Serial Primary Key,
+	first_name VarChar(128),
+	last_name VarChar(128),
+	job_title VarChar(128),
+	supervisor INT references employee(employee_id),
+	department INT
+);
+
+-- Reference Table
+CREATE TABLE IF NOT EXISTS department (
+	department_id Serial Primary Key,
+	department_name VarChar(128),
+	department_head INT references employee(employee_id)
+);
+
+ALTER TABLE employee ADD CONSTRAINT fk_employee_department FOREIGN KEY (department) REFERENCES department (department_id);
+
+-- Reference Table
+CREATE TABLE IF NOT EXISTS type_of_event (
+	event_id Serial Primary Key,
+	event_type VarChar(64),
+	reimbursement_amount INT CONSTRAINT positive_amount CHECK (reimbursement_amount >= 0 AND reimbursement_amount <= 100)
+);
+
+--Reference Table
+CREATE TABLE IF NOT EXISTS event_grading_format (
+	event_grading_format_id SERIAL Primary Key,
+	grade_format_type VarChar(36),
+	passing_grade VARCHAR(3)
+);
+
+CREATE TABLE IF NOT EXISTS employee_user_details (
+	username VarChar(128) Primary Key,
+	password_hash VarChar(128),
+	salt VarChar(12),
+	email VarChar(64) Unique,
+	security_token VarChar(36),
+	last_successful_log_in BIGINT,
+	employee_id INT references employee(employee_id)
+);
+
+CREATE TABLE IF NOT EXISTS tuition_reimbursement_form_data (
+	tuition_reimbursement_form_data_id SERIAL Primary Key,
+	attending_employee INT references employee(employee_id),
+	event_date_time BigINT,
+	event_location VarChar(128),
+	event_description VarChar(256),
+	event_cost NUMERIC(6,2),
+	event_grading_format INT references event_grading_format(event_grading_format_id),
+	type_of_event INT references type_of_event(event_id),
+	event_related_attachment Bytea, -- 1 Megabyte of file (.pdf, .png, .jpeg, .txt, .doc, .docx)
+	approvals_already_provided Bytea -- 1 Megabyte of file (.msg (outlook file))
+);
+
+CREATE TABLE IF NOT EXISTS tuition_reimbursement_process (
+	tr_form_data_id INT references tuition_reimbursement_form_data(tuition_reimbursement_form_data_id),
+	approved_by_supervisor VarChar,
+	approved_by_department_head VarChar,
+	approved_by_benefits_coordinator VarChar, -- pending confirmation
+	presented VarChar,
+    grade_received VarChar,
+	confirmed VarChar,
+	reimburshed VarChar
+);
+
+INSERT INTO department VALUES (DEFAULT, 'finance'),
+							  (DEFAULT, 'executive'),
+							  (DEFAULT, 'technology'),
+							  (DEFAULT, 'house_keeping_and_security'),
+							  (DEFAULT, 'production'),
+							  (DEFAULT, 'marketing_and_communication'),
+							  (DEFAULT, 'customer_service'),							  
+							  (DEFAULT, 'human_resource');
+							  
+
+INSERT INTO type_of_event VALUES (DEFAULT, 'University Courses', 80),
+								 (DEFAULT, 'Seminars', 60),
+								 (DEFAULT, 'Certification Preparation Classes', 75),
+								 (DEFAULT, 'Certification', 100),
+								 (DEFAULT, 'Technical Training', 90),
+								 (DEFAULT, 'Other', 30);
+								
+INSERT INTO event_grading_format VALUES (DEFAULT, 'Presentation', 'N/A'),
+										(DEFAULT, 'letter-grade', 'A+'),
+										(DEFAULT, 'letter-grade', 'A'),
+										(DEFAULT, 'letter-grade', 'A-'),
+										(DEFAULT, 'letter-grade', 'B+'),
+										(DEFAULT, 'letter-grade', 'B'),
+										(DEFAULT, 'letter-grade', 'B-'),
+										(DEFAULT, 'letter-grade', 'C+'),
+										(DEFAULT, 'letter-grade', 'C'),
+										(DEFAULT, 'letter-grade', 'C-'),
+										(DEFAULT, 'letter-grade', 'D+'),
+										(DEFAULT, 'letter-grade', 'D'),
+										(DEFAULT, 'letter-grade', 'D-'),
+										(DEFAULT, 'numeric-grade', 100),
+										(DEFAULT, 'numeric-grade', 95),
+										(DEFAULT, 'numeric-grade', 90),
+										(DEFAULT, 'numeric-grade', 85),
+										(DEFAULT, 'numeric-grade', 80),
+										(DEFAULT, 'numeric-grade', 75),
+										(DEFAULT, 'numeric-grade', 70),
+										(DEFAULT, 'numeric-grade', 65),
+										(DEFAULT, 'numeric-grade', 60),
+										(DEFAULT, 'numeric-grade', 55),
+										(DEFAULT, 'numeric-grade', 50),
+										(DEFAULT, 'numeric-grade', 45),
+										(DEFAULT, 'numeric-grade', 40);
+
+INSERT INTO employee VALUES (DEFAULT, 'Homer','Simpson', 'CEO, Department Head - Executive', NULL, 2), 		-- id: 1, department: 2
+							(DEFAULT, 'John','Wick', 'COO', 1, 2),  			-- id: 2, department: 2
+							(DEFAULT, 'Marge','Simpson', 'CFO', 1, 2),			-- id: 3, department: 2
+							(DEFAULT, 'Michael','Douglas', 'Department Head - House Keeping And Security', 2, 4), -- id: 4, department: 4
+							(DEFAULT, 'Elizabeth', 'Hurley', 'Head of Security', 4, 4), -- id: 5, department: 4
+							(DEFAULT, 'Jane','Doe', 'Day Security Guard', 5, 4), -- id: 6, department: 4
+							(DEFAULT, 'Romee','Paudel', 'Department Head - Finance', 3, 1), -- id: 7, department: 1
+							(DEFAULT, 'Vision','Paudel', 'Manager of Benefits', 7, 1), -- id: 8, department: 1
+							(DEFAULT, 'Shreejan','Paudel', 'Benefits Coordinator', 8, 1), -- id: 9, department: 1
+							(DEFAULT, 'Johnny','Console', 'Benefits Coordinator', 8, 1), -- id: 10, department: 1
+							(DEFAULT, 'Bart','Simpson', 'CTO', 1, 2), -- id: 11, department: 2
+							(DEFAULT, 'Milhouse', 'Van Houten', 'Department Head - Technology', 11, 3), -- id: 12, department: 3
+							(DEFAULT, 'John','Doe', 'Night Security Guard', 5, 4); -- id: 13, department: 4
+							
+
+
+-- SELECT * FROM employee ORDER BY department, employee_id;
+
+UPDATE department SET department_head = 1 where department_id = 2;
+UPDATE department SET department_head = 4 where department_id = 4;
+UPDATE department SET department_head = 7 where department_id = 1;
+UPDATE department SET department_head = 12 where department_id = 3;
+
+
+-- SELECT * FROM employee LEFT JOIN department ON employee.department = department.department_id;
+
+

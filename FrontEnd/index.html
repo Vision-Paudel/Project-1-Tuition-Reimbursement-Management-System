@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<link rel="stylesheet" href="stylesheet.css">
+
+	<head>
+		<title>Tuition Reimbursement Management System</title>	
+	</head>
+
+	<body>
+	
+	<div id="id01" class="modal">  
+	  <div class="modal-content animate">
+		<div class="imgcontainer">
+		  <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+		  <img src="User.png" alt="Avatar" class="avatar">
+		</div>
+
+		<div class="container">
+			<label for="usernameInput">Username</label>
+			<input type="text" placeholder="Enter Username" id="usernameInput" name="usernameInput" required>
+
+			<label for="passwordInput">Password</label>
+			<input type="password" placeholder="Enter Password" id="passwordInput" name="passwordInput" required>
+		
+			
+			<button id="LoginButton" onclick="tryLogin()" type="submit">Login</button>
+			 
+		</div>
+		<div class="container" style="background-color:#f1f1f1">
+				<button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+				<p align="right">Forgot password or need IT support... Contact IT at (555) 555-5555</p>
+		</div>
+	  </div>
+	</div>
+
+	<div id="id02" class="modal">
+		<div class="modal-content animate">
+			<div class="imgcontainer">
+			  <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
+			  <img src="User.png" alt="Avatar" class="avatar">
+			</div>
+	
+			<div class="container">
+				<label for="registerUsernameInput">Username</label>
+				<input type="text" placeholder="Enter Username" id="registerUsernameInput" name="registerUsernameInput" required>
+	
+				<label for="registerPasswordInput">Password</label>
+				<input type="password" placeholder="Enter Password" id="registerPasswordInput" name="registerPasswordInput" required>
+				
+				<label for="registerEmailInput">Email</label>
+				<input type="email" placeholder="Enter Email" id="registerEmailInput" name="registerEmailInput" required>
+				
+				<label for="registerEmployeeIDInput">Employee ID</label>
+				<input type="number" placeholder="1" id="registerEmployeeIDInput" name="registerEmployeeIDInput" min="1" required>
+
+				<button id="RegisterButton" onclick="tryRegister()" type="submit">Register</button>
+				 
+			</div>
+			<div class="container" style="background-color:#f1f1f1">
+					<button type="button" onclick="document.getElementById('id02').style.display='none'" class="cancelbtn">Cancel</button>
+					<p align="right">Forgot password or need IT support... Contact IT at (555) 555-5555</p>
+			</div>
+		  </div>
+	</div>  
+	
+	<nav>
+	<ul>
+		<li><a href="./index.html">Home</a></li>
+		<li id="nav_requests_container"></li>
+		<li style="float:right"><a href="#" onClick="showRegisterModal()" id="nav_register">Register</a></li>
+		<li style="float:right"><a href="#" onClick="showLoginModal()" id="nav_login_logout">Login</a></li>
+	</ul>
+	</nav>
+	<h1>Welcome <div id=fullName></div></h1>
+	<h2> <p>Tuition Reimbursement Management System is a all-in-one platform for submitting, reviewing and reimburshing employee's tuition claims.</p>
+		 <p>Tuition amount of up to $1000 can be reimbursed in a given year.</p>
+		 <p>Process for the reimbursement is outlined below: </p>
+		 <img src="./Reimbursement_Process.drawio.png" height=720px/>
+	</h2>
+	<footer> <hr> © 2022 Vision Paudel, Revature LLC. </footer>
+	<script>
+			
+			if (sessionStorage.getItem("securityToken")==null || sessionStorage.getItem("securityToken")==""){
+				document.getElementById('nav_login_logout').innerHTML = "Login";
+				document.getElementById('nav_login_logout').onclick = showLoginModal;
+			}else{
+				document.getElementById('nav_login_logout').innerHTML = "Logout";
+				document.getElementById('nav_login_logout').onclick = logout;
+				document.getElementById("nav_requests_container").innerHTML = '<a href="./requests.html" id="nav_requests">Requests</a>';
+			}
+
+
+			var modal = document.getElementById('id01');
+			var modal2 = document.getElementById('id02');
+
+			function showLoginModal(){		
+				modal.style.display = "Block"	
+			};
+			
+			function showRegisterModal(){
+				modal2.style.display = "Block"
+			};
+			
+			// When the user clicks anywhere outside of the modal, close it
+			window.onclick = function(event) {
+				if (event.target == modal || event.target == modal2) {
+					modal.style.display = "none";
+					modal2.style.display = "none";
+				}
+			};
+			
+			async function tryLogin(){
+				var usernameFromInput = document.getElementById('usernameInput').value;
+				var passwordFromInput = document.getElementById('passwordInput').value;
+				
+				const data = {
+            		username: usernameFromInput,
+            		password: passwordFromInput            		
+        		}
+
+				console.log("Logging in user :" + JSON.stringify(data))
+
+				const url = "http://localhost:5000/login"
+
+				const httpResponse = await fetch(url, {
+            	method: "POST",
+            	headers: {
+                	'Content-Type': 'application/json'
+            	},
+            		body: JSON.stringify(data)
+        		});
+
+				const body = await httpResponse.json();
+				
+				console.log(body);
+
+				if (body.securityToken != null && body.securityToken != ""){
+					sessionStorage.setItem("username", body.username);
+					sessionStorage.setItem("email", body.email);
+					sessionStorage.setItem("employeeId", body.employeeId);
+					sessionStorage.setItem("lastSuccessfulLogIn", body.lastSuccessfulLogIn);
+					sessionStorage.setItem("passwordHash", body.passwordHash);
+					sessionStorage.setItem("salt", body.salt);
+					sessionStorage.setItem("securityToken", body.securityToken);
+					location.reload();	
+				}
+			}
+
+			async function tryRegister(){
+				
+				var usernameFromInput = document.getElementById('registerUsernameInput').value;
+				var passwordFromInput = document.getElementById('registerPasswordInput').value;
+				var emailFromInput = document.getElementById('registerEmailInput').value;
+				var employeeIDFromInput = document.getElementById('registerEmployeeIDInput').value;
+
+				const data = {
+            		username: usernameFromInput,
+            		password: passwordFromInput,
+            		email: emailFromInput,
+					employeeId: parseInt(employeeIDFromInput)
+        		}
+
+				console.log("Registering user :" + JSON.stringify(data))
+
+				const url = "http://localhost:5000/register"
+
+				const httpResponse = await fetch(url, {
+            	method: "POST",
+            	headers: {
+                	'Content-Type': 'application/json'
+            	},
+            		body: JSON.stringify(data)
+        		});
+
+				const body = await httpResponse.json();
+				
+				console.log(body);
+
+				if (body.securityToken != null && body.securityToken != ""){
+					sessionStorage.setItem("username", body.username);
+					sessionStorage.setItem("email", body.email);
+					sessionStorage.setItem("employeeId", body.employeeId);
+					sessionStorage.setItem("lastSuccessfulLogIn", body.lastSuccessfulLogIn);
+					sessionStorage.setItem("passwordHash", body.passwordHash);
+					sessionStorage.setItem("salt", body.salt);
+					sessionStorage.setItem("securityToken", body.securityToken);
+					location.reload();
+				}				
+
+			}
+
+			function logout(){
+				sessionStorage.setItem("username","");
+				sessionStorage.setItem("email","");
+				sessionStorage.setItem("employeeId","");
+				sessionStorage.setItem("lastSuccessfulLogIn","");
+				sessionStorage.setItem("passwordHash","");
+				sessionStorage.setItem("salt","");
+				sessionStorage.setItem("securityToken","");
+				location.reload();	
+			}
+
+			
+	</script>	
+	</body>
+</html>
