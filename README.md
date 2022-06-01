@@ -31,8 +31,13 @@ git clone https://github.com/Vision-Paudel/Project-1-Tuition-Reimbursement-Manag
 
 ## Usage
 
+Start a Postgres server and run the sql seript.
+
+In the configuration file, enter your database details.
+
 Run the Python code which should start the backend server.
-You can then use
+
+You can now open the HTML files and run the Frontend.
 
 This was a solo project.
 
